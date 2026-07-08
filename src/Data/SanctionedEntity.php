@@ -113,14 +113,24 @@ class SanctionedEntity
      */
     public function getContentHash(): string
     {
+        // sort list fields so upstream reordering does not register as a
+        // change, and include type and listing date so reclassification does
+        $sorted = function (array $items): array {
+            $encoded = array_map(fn($i) => json_encode($i), $items);
+            sort($encoded);
+            return $encoded;
+        };
+
         return hash('sha256', json_encode([
+            $this->entityType,
             $this->primaryName,
-            $this->aliases,
-            $this->dates,
-            $this->nationalities,
-            $this->identifiers,
-            $this->addresses,
-            $this->programs,
+            $this->listedDate,
+            $sorted($this->aliases),
+            $sorted($this->dates),
+            $sorted($this->nationalities),
+            $sorted($this->identifiers),
+            $sorted($this->addresses),
+            $sorted($this->programs),
             $this->remarks,
         ]));
     }

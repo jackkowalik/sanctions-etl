@@ -45,20 +45,21 @@ class CanadaSEMA implements SourceInterface
             CURLOPT_URL => self::URL,
             CURLOPT_FILE => $fp,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT => 120,
+            CURLOPT_TIMEOUT => 600,
             CURLOPT_CONNECTTIMEOUT => 30,
             CURLOPT_USERAGENT => Config::USER_AGENT,
         ]);
 
-        curl_exec($ch);
+        $ok = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $errno = curl_errno($ch);
         $error = curl_error($ch);
         curl_close($ch);
         fclose($fp);
 
-        if ($httpCode !== 200) {
+        if ($ok === false || $errno !== 0 || $httpCode !== 200) {
             @unlink($destFile);
-            throw new \RuntimeException("Failed to fetch Canada list: HTTP {$httpCode} - {$error}");
+            throw new \RuntimeException("Failed to fetch Canada list: HTTP {$httpCode}, curl errno {$errno} - {$error}");
         }
 
         $fileSize = filesize($destFile);

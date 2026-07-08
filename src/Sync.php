@@ -14,7 +14,7 @@ use SanctionsEtl\Download\UKHMTreasury;
 use SanctionsEtl\Storage\EntityStore;
 
 /**
- * Runs the fetch -> parse -> diff -> load pipeline across all registered
+ * Runs the fetch > parse > diff > load pipeline across all registered
  * sources. The storage backend is injected so the same loop drives the
  * JSONL and MySQL modes.
  */
@@ -156,11 +156,24 @@ class Sync
             }
 
             $diffStart = microtime(true);
-            $changeset = $this->differ->build($sourceId, $entities, $this->store->getActiveHashes($sourceId));
+            $existing = $this->store->getActiveHashes($sourceId);
+            $changeset = $this->differ->build($sourceId, $entities, $existing);
             $diffMs = (int) round((microtime(true) - $diffStart) * 1000);
 
             $summary = $changeset->getSummary();
             echo "  Changeset: +{$summary['inserts']} ~{$summary['updates']} -{$summary['delists']} [{$diffMs}ms]\n";
+
+            // a truncated or half-parsed file shows up as a large batch of
+            // delists, not as zero entities. Refuse to apply anything that
+            // would delist more than half the source in one run because its
+            // more likely than not a suspicious change.
+            if (count($existing) > 0 && $summary['delists'] > 0.5 * count($existing)) {
+                throw new \RuntimeException(sprintf(
+                    "Refusing changeset for %s: %d delists against %d existing entities. "
+                    . "If this is a genuine list revision, delete out/%s.jsonl and re-sync.",
+                    $sourceId, $summary['delists'], count($existing), $sourceId
+                ));
+            }
 
             $loadResult = ['inserted' => 0, 'updated' => 0, 'delisted' => 0, 'errors' => 0];
             if (!$changeset->isEmpty()) {
