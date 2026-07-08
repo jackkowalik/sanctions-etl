@@ -3,11 +3,8 @@
 > Work in progress: 6 of 15 sources are live
 
 Sanctions data ETL in PHP. Syncs official sanctions and exclusion lists from
-14 government and institutional sources into a normalized, machine-readable
-dataset. JSONL by default, MySQL optionally.
-
-MIT licensed, code and pipeline both. No API keys required for 13 of 14
-sources.
+14 government and institutional sources into a normalized dataset. JSONL by 
+default, MySQL optionally.
 
 ## Quickstart
 
@@ -20,7 +17,7 @@ tell you if anything is missing).
     cp .env.example .env
     php bin/sync.php
 
-That produces one JSONL file per source in `out/`, plus `manifest.json`
+This produces one JSONL file per source in `out/`, plus `manifest.json`
 (per-source hashes, counts, last changeset) and `sync_log.jsonl` (an
 append-only audit log of every sync run).
 
@@ -29,7 +26,7 @@ so unchanged lists are skipped.
 
 ## Sample output
 
-One line per entity. Here is a real record from the UN Security Council consolidated
+One line per entity. Here is a example record from the UN Security Council consolidated
 list, pretty printed:
 
     {
@@ -86,11 +83,8 @@ warning and everything else syncs just fine.
 
 Each sync is a four-stage pipeline per source: fetch (with hash
 short-circuit), parse into the normalized entity model, diff against the
-current stored state to compute inserts / updates / delists, and apply the
-changeset to the storage backend. Writes are atomic so a crashed sync leaves
-the previous dataset intact.
-
-Parse failures are counted and logged with source record identifiers.
+current stored state to compute the inserts / updates / delists, and apply the
+changeset to the storage backend.
 
 ## MySQL mode
 
