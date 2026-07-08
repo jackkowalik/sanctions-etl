@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS sanctions_entities (
     -- strict DATE column would reject real upstream values
     listed_date      VARCHAR(32) NULL,
     remarks          TEXT NULL,
+    raw              JSON NULL,
     content_hash     CHAR(64) NOT NULL,
     delisted_at      DATETIME NULL,
     created_at       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

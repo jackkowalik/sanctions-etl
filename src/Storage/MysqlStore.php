@@ -160,10 +160,10 @@ class MysqlStore implements EntityStore
         $stmt = $this->pdo->prepare("
             INSERT INTO sanctions_entities
                 (source_id, source_entity_id, entity_type, primary_name, dates,
-                 nationalities, programs, listed_date, remarks, content_hash, delisted_at)
+                 nationalities, programs, listed_date, remarks, content_hash, raw, delisted_at)
             VALUES
                 (:source_id, :source_entity_id, :entity_type, :primary_name, :dates,
-                 :nationalities, :programs, :listed_date, :remarks, :content_hash, NULL)
+                 :nationalities, :programs, :listed_date, :remarks, :content_hash, :raw, NULL)
             ON DUPLICATE KEY UPDATE
                 entity_type = VALUES(entity_type),
                 primary_name = VALUES(primary_name),
@@ -173,6 +173,7 @@ class MysqlStore implements EntityStore
                 listed_date = VALUES(listed_date),
                 remarks = VALUES(remarks),
                 content_hash = VALUES(content_hash),
+                raw = VALUES(raw),
                 delisted_at = NULL
         ");
 
@@ -187,6 +188,7 @@ class MysqlStore implements EntityStore
             ':listed_date' => $row['listed_date'] !== null ? mb_substr($row['listed_date'], 0, 32) : null,
             ':remarks' => $row['remarks'],
             ':content_hash' => $entity->getContentHash(),
+            ':raw' => !empty($row['raw']) ? json_encode($row['raw'], JSON_UNESCAPED_UNICODE) : null,
         ]);
 
         // lastInsertId is unreliable after ON DUPLICATE KEY UPDATE,

@@ -45,13 +45,14 @@ consolidated list, pretty printed:
       "programs": ["Iran"],
       "listed_date": "2007-03-24",
       "remarks": "[Old Reference # I.47.D.7]",
-      "content_hash": "46db16bf..."
+      "raw": {"reference_number": "IRi.043"},
+      "content_hash": "554e79f2..."
     }
 
 Every entity carries the same shape regardless of source: names, aliases
 with quality flags, dates, nationalities, identity documents, addresses,
-sanction programs, listing date, and remarks, plus a content hash used for
-change detection between syncs.
+sanction programs, listing date, and remarks, plus a raw object of source-native fields kept for audit, and
+a content hash used for change detection between syncs.
 
 ## Sources
 

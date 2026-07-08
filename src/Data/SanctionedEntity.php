@@ -152,6 +152,7 @@ class SanctionedEntity
             'programs' => $this->programs,
             'listed_date' => $this->listedDate,
             'remarks' => $this->remarks,
+            'raw' => $this->raw,
         ];
     }
 }
