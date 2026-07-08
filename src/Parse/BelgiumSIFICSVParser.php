@@ -51,13 +51,13 @@ class BelgiumSIFICSVParser implements ParserInterface
 
         $handle = fopen($filePath, 'r');
         if ($handle === false) {
-            throw new \\RuntimeException("Failed to read file: {$filePath}");
+            throw new \RuntimeException("Failed to read file: {$filePath}");
         }
 
         // Skip header
         if (fgets($handle) === false) {
             fclose($handle);
-            throw new \\RuntimeException("Belgium CSV has no data rows");
+            throw new \RuntimeException("Belgium CSV has no data rows");
         }
 
         $groups = [];
