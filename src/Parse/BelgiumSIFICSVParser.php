@@ -95,11 +95,9 @@ class BelgiumSIFICSVParser implements ParserInterface
         ]);
 
         $entities = [];
-        $idx = 0;
         foreach ($groups as $groupKey => $rows) {
-            $idx++;
             try {
-                $entity = $this->parseGroup($idx, $rows, $sourceId);
+                $entity = $this->parseGroup($groupKey, $rows, $sourceId);
                 if ($entity !== null) {
                     $entities[] = $entity;
                 }
@@ -123,7 +121,7 @@ class BelgiumSIFICSVParser implements ParserInterface
         return $entities;
     }
 
-    private function parseGroup(int $idx, array $rows, string $sourceId): ?SanctionedEntity
+    private function parseGroup(string $groupKey, array $rows, string $sourceId): ?SanctionedEntity
     {
         $firstRow = $rows[0];
 
@@ -233,7 +231,7 @@ class BelgiumSIFICSVParser implements ParserInterface
         }
 
         // Generate stable ID from name + dob
-        $sourceEntityId = 'BE_' . $idx;
+        $sourceEntityId = 'BE_' . substr(hash('sha256', $groupKey), 0, 16);
 
         return new SanctionedEntity(
             sourceEntityId: $sourceEntityId,
@@ -273,7 +271,10 @@ class BelgiumSIFICSVParser implements ParserInterface
             $day = (int)$m[1];
             $month = (int)$m[2];
             $yearShort = (int)$m[3];
-            $year = $yearShort >= 30 ? 1900 + $yearShort : 2000 + $yearShort;
+            $year = 2000 + $yearShort;
+            if ($year > (int) date("Y")) {
+                $year -= 100;
+            }
             return sprintf('%d-%02d-%02d', $year, $month, $day);
         }
 
@@ -292,7 +293,10 @@ class BelgiumSIFICSVParser implements ParserInterface
             $day = (int)$m[1];
             $month = (int)$m[2];
             $yearShort = (int)$m[3];
-            $year = $yearShort >= 30 ? 1900 + $yearShort : 2000 + $yearShort;
+            $year = 2000 + $yearShort;
+            if ($year > (int) date("Y")) {
+                $year -= 100;
+            }
             return sprintf('%d-%02d-%02d', $year, $month, $day);
         }
 
