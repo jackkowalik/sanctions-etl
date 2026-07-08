@@ -2,15 +2,15 @@
 
 namespace SanctionsEtl\Download;
 
-use Psr\Log\LoggerInterface; 
+use Psr\Log\LoggerInterface;
 use SanctionsEtl\Config;
 use SanctionsEtl\Parse\ParserInterface;
-use SanctionsEtl\Parse\UNConsolidatedXMLParser;
+use SanctionsEtl\Parse\CanadaSEMAXMLParser;
 
-class UNSecurityCouncil implements SourceInterface
+class CanadaSEMA implements SourceInterface
 {
-    private const URL = 'https://unsolprodfiles.blob.core.windows.net/publiclegacyxmlfiles/EN/consolidated.xml';
-    private const SOURCE_ID = 'un_consolidated';
+    private const URL = 'https://www.international.gc.ca/world-monde/assets/office_docs/international_relations-relations_internationales/sanctions/sema-lmes.xml';
+    private const SOURCE_ID = 'ca_sema';
 
     private LoggerInterface $logger;
     private ?string $downloadDir;
@@ -22,7 +22,7 @@ class UNSecurityCouncil implements SourceInterface
     }
 
     public function getSourceId(): string { return self::SOURCE_ID; }
-    public function getDisplayName(): string { return 'UN Security Council Consolidated List'; }
+    public function getDisplayName(): string { return 'Canada SEMA Consolidated Sanctions List'; }
     public function getUrls(): array { return ['full' => self::URL]; }
     public function getFormat(): string { return 'xml'; }
     public function supportsDelta(): bool { return false; }
@@ -30,47 +30,41 @@ class UNSecurityCouncil implements SourceInterface
 
     public function fetch(?string $lastHash = null): FetchResult
     {
-        $url = self::URL;
         $destDir = $this->downloadDir ?? sys_get_temp_dir();
         $destFile = $destDir . '/' . self::SOURCE_ID . '_' . date('Ymd_His') . '.xml';
 
-        $this->logger->info("Fetching UN consolidated list", [
-            'url' => $url,
-            'dest_file' => $destFile
-        ]);
+        $this->logger->info("Fetching Canada SEMA list", ['url' => self::URL]);
 
         $fp = fopen($destFile, 'w');
         if ($fp === false) {
-            throw new \RuntimeException("Failed to open file for writing: {$destFile}");
+            throw new \RuntimeException("Failed to open file: {$destFile}");
         }
 
         $ch = curl_init();
         curl_setopt_array($ch, [
-            CURLOPT_URL => $url,
+            CURLOPT_URL => self::URL,
             CURLOPT_FILE => $fp,
             CURLOPT_FOLLOWLOCATION => true,
-            CURLOPT_TIMEOUT => 600,
+            CURLOPT_TIMEOUT => 120,
             CURLOPT_CONNECTTIMEOUT => 30,
             CURLOPT_USERAGENT => Config::USER_AGENT,
         ]);
 
-        $ok = curl_exec($ch);
+        curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $errno = curl_errno($ch);
         $error = curl_error($ch);
-
         curl_close($ch);
         fclose($fp);
 
-        if ($ok === false || $errno !== 0 || $httpCode !== 200) {
+        if ($httpCode !== 200) {
             @unlink($destFile);
-            throw new \RuntimeException("Failed to fetch UN list: HTTP {$httpCode}, curl errno {$errno} - {$error}");
+            throw new \RuntimeException("Failed to fetch Canada list: HTTP {$httpCode} - {$error}");
         }
 
         $fileSize = filesize($destFile);
         if ($fileSize === 0) {
             @unlink($destFile);
-            throw new \RuntimeException("UN returned empty response");
+            throw new \RuntimeException("Canada returned empty response");
         }
 
         $hash = hash_file('sha256', $destFile);
@@ -79,12 +73,6 @@ class UNSecurityCouncil implements SourceInterface
             @unlink($destFile);
             return FetchResult::unchanged($hash);
         }
-
-        $this->logger->info("UN data fetched", [
-            'http_code' => $httpCode,
-            'file_size' => $fileSize,
-            'hash' => $hash,
-        ]);
 
         return new FetchResult(
             rawContent: $destFile,
@@ -95,7 +83,7 @@ class UNSecurityCouncil implements SourceInterface
             meta: [
                 'http_code' => $httpCode,
                 'file_size' => $fileSize,
-                'url' => $url,
+                'url' => self::URL,
                 'fetched_at' => date('Y-m-d H:i:s'),
                 'is_file_path' => true,
             ]
@@ -104,6 +92,6 @@ class UNSecurityCouncil implements SourceInterface
 
     public function getParser(): ParserInterface
     {
-        return new UNConsolidatedXMLParser($this->logger);
+        return new CanadaSEMAXMLParser($this->logger);
     }
 }

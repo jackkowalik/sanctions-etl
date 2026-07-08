@@ -2,15 +2,15 @@
 
 namespace SanctionsEtl\Download;
 
-use Psr\Log\LoggerInterface; 
+use Psr\Log\LoggerInterface;
 use SanctionsEtl\Config;
 use SanctionsEtl\Parse\ParserInterface;
-use SanctionsEtl\Parse\UNConsolidatedXMLParser;
+use SanctionsEtl\Parse\EUConsolidatedXMLParser;
 
-class UNSecurityCouncil implements SourceInterface
+class EUConsolidated implements SourceInterface
 {
-    private const URL = 'https://unsolprodfiles.blob.core.windows.net/publiclegacyxmlfiles/EN/consolidated.xml';
-    private const SOURCE_ID = 'un_consolidated';
+    private const URL = 'https://webgate.ec.europa.eu/fsd/fsf/public/files/xmlFullSanctionsList/content?token=dG9rZW4tMjAxNw';
+    private const SOURCE_ID = 'eu_consolidated';
 
     private LoggerInterface $logger;
     private ?string $downloadDir;
@@ -22,11 +22,11 @@ class UNSecurityCouncil implements SourceInterface
     }
 
     public function getSourceId(): string { return self::SOURCE_ID; }
-    public function getDisplayName(): string { return 'UN Security Council Consolidated List'; }
+    public function getDisplayName(): string { return 'EU Consolidated Financial Sanctions List'; }
     public function getUrls(): array { return ['full' => self::URL]; }
     public function getFormat(): string { return 'xml'; }
     public function supportsDelta(): bool { return false; }
-    public function getExpectedUpdateFrequency(): int { return 10080; }
+    public function getExpectedUpdateFrequency(): int { return 1440; }
 
     public function fetch(?string $lastHash = null): FetchResult
     {
@@ -34,7 +34,7 @@ class UNSecurityCouncil implements SourceInterface
         $destDir = $this->downloadDir ?? sys_get_temp_dir();
         $destFile = $destDir . '/' . self::SOURCE_ID . '_' . date('Ymd_His') . '.xml';
 
-        $this->logger->info("Fetching UN consolidated list", [
+        $this->logger->info("Fetching EU consolidated list", [
             'url' => $url,
             'dest_file' => $destFile
         ]);
@@ -58,19 +58,20 @@ class UNSecurityCouncil implements SourceInterface
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $errno = curl_errno($ch);
         $error = curl_error($ch);
-
         curl_close($ch);
         fclose($fp);
 
         if ($ok === false || $errno !== 0 || $httpCode !== 200) {
             @unlink($destFile);
-            throw new \RuntimeException("Failed to fetch UN list: HTTP {$httpCode}, curl errno {$errno} - {$error}");
+            throw new \RuntimeException(
+                "Failed to fetch EU list: HTTP {$httpCode}, curl errno {$errno} - {$error}"
+            );
         }
 
         $fileSize = filesize($destFile);
         if ($fileSize === 0) {
             @unlink($destFile);
-            throw new \RuntimeException("UN returned empty response");
+            throw new \RuntimeException("EU returned empty response");
         }
 
         $hash = hash_file('sha256', $destFile);
@@ -80,7 +81,7 @@ class UNSecurityCouncil implements SourceInterface
             return FetchResult::unchanged($hash);
         }
 
-        $this->logger->info("UN data fetched", [
+        $this->logger->info("EU data fetched", [
             'http_code' => $httpCode,
             'file_size' => $fileSize,
             'hash' => $hash,
@@ -104,6 +105,6 @@ class UNSecurityCouncil implements SourceInterface
 
     public function getParser(): ParserInterface
     {
-        return new UNConsolidatedXMLParser($this->logger);
+        return new EUConsolidatedXMLParser($this->logger);
     }
 }
