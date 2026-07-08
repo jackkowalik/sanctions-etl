@@ -25,7 +25,15 @@
             "SanctionsEtl\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "SanctionsEtl\\Tests\\": "tests/"
+        }
+    },
     "config": {
         "sort-packages": true
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5"
     }
 }
