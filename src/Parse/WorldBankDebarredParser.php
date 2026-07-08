@@ -174,7 +174,7 @@ class WorldBankDebarredParser implements ParserInterface
         }
         $remarks = !empty($remarksParts) ? implode('; ', $remarksParts) : null;
         if ($remarks !== null && strlen($remarks) > 1000) {
-            $remarks = substr($remarks, 0, 1000);
+            $remarks = mb_substr($remarks, 0, 1000);
         }
 
         // Listed date from debarment start

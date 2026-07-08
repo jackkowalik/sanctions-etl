@@ -188,7 +188,7 @@ class SwissSECOXMLParser implements ParserInterface
         }
 
         if ($remarks !== null && strlen($remarks) > 1000) {
-            $remarks = substr($remarks, 0, 1000);
+            $remarks = mb_substr($remarks, 0, 1000);
         }
 
         return new SanctionedEntity(
@@ -221,7 +221,7 @@ class SwissSECOXMLParser implements ParserInterface
         $remarks = $this->extractRemarks($entityNode);
 
         if ($remarks !== null && strlen($remarks) > 1000) {
-            $remarks = substr($remarks, 0, 1000);
+            $remarks = mb_substr($remarks, 0, 1000);
         }
 
         $dates = [];

@@ -217,7 +217,7 @@ class AustraliaDFATXLSXParser implements ParserInterface
             // Additional info as remarks (take first non-empty)
             $info = trim((string)($row[self::COL_ADDITIONAL_INFO] ?? ''));
             if ($info !== '' && $remarks === null) {
-                $remarks = strlen($info) > 1000 ? substr($info, 0, 1000) : $info;
+                $remarks = strlen($info) > 1000 ? mb_substr($info, 0, 1000) : $info;
             }
 
             // Place of birth appended to remarks
@@ -229,7 +229,7 @@ class AustraliaDFATXLSXParser implements ParserInterface
                 } elseif (!str_contains($remarks, $pobStr)) {
                     $remarks .= '; ' . $pobStr;
                     if (strlen($remarks) > 1000) {
-                        $remarks = substr($remarks, 0, 1000);
+                        $remarks = mb_substr($remarks, 0, 1000);
                     }
                 }
             }

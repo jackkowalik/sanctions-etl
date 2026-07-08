@@ -217,7 +217,7 @@ class USGovSAMParser implements ParserInterface
         }
         $remarks = !empty($remarkParts) ? implode('; ', $remarkParts) : null;
         if ($remarks !== null && strlen($remarks) > 1000) {
-            $remarks = substr($remarks, 0, 1000);
+            $remarks = mb_substr($remarks, 0, 1000);
         }
 
         // Dates

@@ -244,7 +244,7 @@ class UKHMTCSVParser implements ParserInterface
         foreach ($rows as $row) {
             if ($row['other_info'] !== '') {
                 $remarks = $row['other_info'];
-                if (strlen($remarks) > 1000) $remarks = substr($remarks, 0, 1000);
+                if (strlen($remarks) > 1000) $remarks = mb_substr($remarks, 0, 1000);
                 break;
             }
         }
@@ -252,7 +252,7 @@ class UKHMTCSVParser implements ParserInterface
         $pobStr = implode(', ', array_filter([$firstRow['tob'], $firstRow['cob']]));
         if ($pobStr !== '') {
             $remarks = ($remarks ? $remarks . '; ' : '') . "POB: {$pobStr}";
-            if (strlen($remarks) > 1000) $remarks = substr($remarks, 0, 1000);
+            if (strlen($remarks) > 1000) $remarks = mb_substr($remarks, 0, 1000);
         }
 
         $listedDate = $this->parseUKDate($firstRow['designated']);

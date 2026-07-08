@@ -269,7 +269,7 @@ class FranceTresorParser implements ParserInterface
         $motifs = $this->getFirstValue($fields, 'MOTIFS', 'Motifs');
         $remarks = $motifs !== '' ? $motifs : null;
         if ($remarks !== null && strlen($remarks) > 1000) {
-            $remarks = substr($remarks, 0, 1000);
+            $remarks = mb_substr($remarks, 0, 1000);
         }
 
         // Title
@@ -277,7 +277,7 @@ class FranceTresorParser implements ParserInterface
         if ($titre !== '' && $remarks !== null) {
             $remarks = "Title: {$titre}; {$remarks}";
             if (strlen($remarks) > 1000) {
-                $remarks = substr($remarks, 0, 1000);
+                $remarks = mb_substr($remarks, 0, 1000);
             }
         } elseif ($titre !== '') {
             $remarks = "Title: {$titre}";
