@@ -1,7 +1,5 @@
 # sanctions-etl
 
-> All 15 sources are live. MySQL storage mode is still in progress.
-
 Sanctions data ETL in PHP. Syncs official sanctions and exclusion lists from
 15 government and institutional sources into a normalized dataset. JSONL by
 default, MySQL optionally.
@@ -94,10 +92,21 @@ changeset to the storage backend.
 
 ## MySQL mode
 
-Not implemented yet. The storage layer is an interface, so a MySQL backend
-slots in without touching the pipeline. Planned: relational tables for
-entities, aliases, identifiers, and addresses, delist timestamps instead of
-file removal, plus schema.sql and a docker-compose setup.
+Set `STORAGE=mysql` plus `DB_NAME`, `DB_USER`, and `DB_PASS` in `.env`,
+and load `schema.sql` into the database. The included docker-compose does
+both in one shot:
+
+    docker compose up -d
+
+boots MySQL 8 with the schema preloaded; the matching `.env` values are
+`sanctions` for all three. Against your own server, apply the schema by
+hand: `mysql yourdb < schema.sql`.
+
+Entities, aliases, identifiers, and addresses land in relational tables.
+Delisted entities are kept with a `delisted_at` timestamp rather than
+deleted, so re-listings restore the same row and history survives. The
+`sanctions_sources` and `sanctions_sync_log` tables replace
+`manifest.json` and `sync_log.jsonl`.
 
 ## Roadmap
 

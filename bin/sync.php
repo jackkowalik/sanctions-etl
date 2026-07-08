@@ -5,6 +5,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use SanctionsEtl\Config;
 use SanctionsEtl\Log\ConsoleLogger;
 use SanctionsEtl\Storage\JsonStore;
+use SanctionsEtl\Storage\MysqlStore;
 use SanctionsEtl\Sync;
 use Psr\Log\LogLevel;
 
@@ -37,11 +38,21 @@ try {
 $logger = new ConsoleLogger($logLevel);
 
 if ($config->storage() === 'mysql') {
-    fwrite(STDERR, "MySQL storage backend is not implemented yet; set STORAGE=json\n");
-    exit(1);
+    try {
+        $pdo = new PDO($config->dbDsn(), $config->dbUser(), $config->dbPass(), [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]);
+    } catch (PDOException $e) {
+        fwrite(STDERR, "Database connection failed: {$e->getMessage()}\n");
+        exit(1);
+    }
+    $store = new MysqlStore($pdo, $logger);
+} else {
+    $store = new JsonStore($config->outputDir(), $logger);
 }
 
-$store = new JsonStore($config->outputDir(), $logger);
 $sync = new Sync($config, $logger, $store);
 
 exit($sync->execute($onlySource, $force));
