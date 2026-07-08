@@ -49,29 +49,26 @@ class BelgiumSIFICSVParser implements ParserInterface
             'source_id' => $sourceId,
         ]);
 
-        $content = file_get_contents($filePath);
-        if ($content === false) {
-            throw new \RuntimeException("Failed to read file: {$filePath}");
-        }
-
-        $lines = explode("\n", $content);
-        if (count($lines) < 2) {
-            throw new \RuntimeException("Belgium CSV has no data rows");
+        $handle = fopen($filePath, 'r');
+        if ($handle === false) {
+            throw new \\RuntimeException("Failed to read file: {$filePath}");
         }
 
         // Skip header
-        array_shift($lines);
+        if (fgets($handle) === false) {
+            fclose($handle);
+            throw new \\RuntimeException("Belgium CSV has no data rows");
+        }
 
         $groups = [];
         $errors = 0;
         $rowNum = 0;
 
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '') continue;
+        // streamed so that quoted fields with embedded newlines survive
+        while (($row = fgetcsv($handle, 0, ';', '"')) !== false) {
+            if ($row === [null]) continue;
+            if (count($row) === 1 && trim((string) ($row[0] ?? '')) === '') continue;
             $rowNum++;
-
-            $row = str_getcsv($line, ';', '"');
 
             $wholename = trim($row[self::COL_WHOLENAME] ?? '');
             if ($wholename === '') continue;
@@ -88,6 +85,8 @@ class BelgiumSIFICSVParser implements ParserInterface
             }
             $groups[$groupKey][] = $row;
         }
+
+        fclose($handle);
 
         $this->logger->info("Belgium SIFI rows grouped", [
             'total_rows' => $rowNum,
