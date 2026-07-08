@@ -1,6 +1,6 @@
 {
     "name": "jackkowalik/sanctions-etl",
-    "description": "Sanctions data ETL in PHP. Syncs 14 government sources into normalized JSONL or MySQL.",
+    "description": "Sanctions data ETL in PHP. Syncs 15 government sources into normalized JSONL or MySQL.",
     "type": "project",
     "license": "MIT",
     "keywords": ["sanctions", "ofac", "aml", "compliance", "etl"],
