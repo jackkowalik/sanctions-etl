@@ -5,3 +5,4 @@
 *.log
 id_*
 *.pub
+.phpunit.result.cache

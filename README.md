@@ -1,9 +1,9 @@
 # sanctions-etl
 
-> Work in progress: 6 of 15 sources are live
+> All 15 sources are live. MySQL storage mode is still in progress.
 
 Sanctions data ETL in PHP. Syncs official sanctions and exclusion lists from
-14 government and institutional sources into a normalized dataset. JSONL by 
+15 government and institutional sources into a normalized dataset. JSONL by
 default, MySQL optionally.
 
 ## Quickstart
@@ -26,8 +26,8 @@ so unchanged lists are skipped.
 
 ## Sample output
 
-One line per entity. Here is a example record from the UN Security Council consolidated
-list, pretty printed:
+One line per entity. Here is an example record from the UN Security Council
+consolidated list, pretty printed:
 
     {
       "source_entity_id": "110404",
@@ -66,7 +66,7 @@ change detection between syncs.
 | OFAC Consolidated Non-SDN List | ofac_consolidated | XML |
 | UK Sanctions List | uk_sanctions | XML |
 | UK HM Treasury / OFSI Consolidated List | gb_hmt | CSV |
-| US Consolidated Screening List (sub-lists) | us_csl_* | CSV |
+| US Consolidated Screening List (11 sub-lists) | see below | CSV |
 | FBI Most Wanted | us_fbi_wanted | JSON |
 | Swiss SECO Sanctions List | ch_seco | XML |
 | Australia DFAT Consolidated List | au_dfat | XLSX |
@@ -75,9 +75,15 @@ change detection between syncs.
 | France DG Tresor National Freezing List | fr_tresor | JSON |
 | US SAM.gov Procurement Exclusions | us_sam_exclusions | CSV |
 
+The CSL is a single download that fans out into 11 sub-list source IDs:
+us_bis_entity, us_bis_denied, us_bis_unverified, us_bis_meu, us_cmic,
+us_itar_debarred, us_isn_nonprolif, us_ofac_ssi, us_ofac_mbs, us_ofac_plc,
+and us_ofac_capta. SDN entries are excluded from the CSL parse since they
+are already ingested from the richer OFAC advanced XML.
+
 SAM.gov is the one source requiring a key. A free one from your sam.gov
-account, set as SAM_API_KEY. Left unset, that one is skipped with a
-warning and everything else syncs just fine.
+account, set as SAM_API_KEY in `.env`. Left unset, that source is skipped
+with a log line and everything else syncs just fine.
 
 ## How it works
 

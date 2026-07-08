@@ -14,6 +14,7 @@
         "ext-simplexml": "*",
         "ext-xmlreader": "*",
         "ext-zip": "*",
+        "phpoffice/phpspreadsheet": "^5.8",
         "psr/log": "^3.0",
         "vlucas/phpdotenv": "^5.6"
     },

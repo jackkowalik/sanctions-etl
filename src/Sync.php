@@ -11,6 +11,14 @@ use SanctionsEtl\Download\UKSanctions;
 use SanctionsEtl\Download\CanadaSEMA;
 use SanctionsEtl\Download\SwissSECO;
 use SanctionsEtl\Download\UKHMTreasury;
+use SanctionsEtl\Download\BelgiumSIFI;
+use SanctionsEtl\Download\WorldBankDebarred;
+use SanctionsEtl\Download\FranceTresor;
+use SanctionsEtl\Download\AustraliaDFAT;
+use SanctionsEtl\Download\OFAC;
+use SanctionsEtl\Download\USConsolidatedScreeningList;
+use SanctionsEtl\Download\FBIWanted;
+use SanctionsEtl\Download\USGovSAM;
 use SanctionsEtl\Storage\EntityStore;
 
 /**
@@ -57,7 +65,23 @@ class Sync
             new CanadaSEMA($logger, $dir),
             new SwissSECO($logger, $dir),
             new UKHMTreasury($logger, $dir),
+            new BelgiumSIFI($logger, $dir),
+            new WorldBankDebarred($logger, $dir),
+            new FranceTresor($logger, $dir),
+            new AustraliaDFAT($logger, $dir),
+            ...OFAC::all($logger, $dir),
+            ...USConsolidatedScreeningList::all($logger, $dir),
+            new FBIWanted($logger, $dir),
         ];
+
+        // SAM.gov requires a personal API key; without one the source is
+        // skipped rather than failing every run
+        $samKey = $this->config->samApiKey();
+        if ($samKey !== null) {
+            $this->sources[] = new USGovSAM($logger, $samKey, $dir);
+        } else {
+            $logger->info("SAM.gov source skipped: SAM_API_KEY not set");
+        }
     }
 
     /** @return SourceInterface[] */
