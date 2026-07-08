@@ -10,10 +10,13 @@ use Psr\Log\LogLevel;
 
 $onlySource = null;
 $logLevel = LogLevel::INFO;
+$force = false;
 
 foreach (array_slice($argv, 1) as $arg) {
     if ($arg === '-v' || $arg === '--verbose') {
         $logLevel = LogLevel::DEBUG;
+    } elseif ($arg === '--force') {
+        $force = true;
     } elseif (str_starts_with($arg, '--source=')) {
         $onlySource = substr($arg, 9);
     } elseif ($arg === '--help' || $arg === '-h') {
@@ -41,4 +44,4 @@ if ($config->storage() === 'mysql') {
 $store = new JsonStore($config->outputDir(), $logger);
 $sync = new Sync($config, $logger, $store);
 
-exit($sync->execute($onlySource));
+exit($sync->execute($onlySource, $force));

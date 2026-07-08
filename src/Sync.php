@@ -14,7 +14,7 @@ use SanctionsEtl\Download\UKHMTreasury;
 use SanctionsEtl\Storage\EntityStore;
 
 /**
- * Runs the fetch > parse > diff > load pipeline across all registered
+ * Runs the fetch, parse, diff, load pipeline across all registered
  * sources. The storage backend is injected so the same loop drives the
  * JSONL and MySQL modes.
  */
@@ -27,6 +27,8 @@ class Sync
 
     /** @var SourceInterface[] */
     private array $sources = [];
+
+    private bool $force = false;
 
     public function __construct(Config $config, LoggerInterface $logger, EntityStore $store)
     {
@@ -70,8 +72,9 @@ class Sync
      * @param string|null $onlySource source id to sync, null for all
      * @return int process exit code, nonzero if any source failed
      */
-    public function execute(?string $onlySource = null): int
+    public function execute(?string $onlySource = null, bool $force = false): int
     {
+        $this->force = $force;
         $sources = $this->sources;
 
         if ($onlySource !== null) {
@@ -164,14 +167,27 @@ class Sync
             echo "  Changeset: +{$summary['inserts']} ~{$summary['updates']} -{$summary['delists']} [{$diffMs}ms]\n";
 
             // a truncated or half-parsed file shows up as a large batch of
-            // delists, not as zero entities. Refuse to apply anything that
-            // would delist more than half the source in one run because its
-            // more likely than not a suspicious change.
-            if (count($existing) > 0 && $summary['delists'] > 0.5 * count($existing)) {
+            // delists, not as zero entities. Genuine daily churn on these
+            // lists is a fraction of a percent, so past 5% (with an absolute
+            // floor so small sources dont trip on a handful of delists) the
+            // changeset is refused unless the operator passes --force.
+            $delistLimit = max(25, (int) ceil(0.05 * count($existing)));
+            if (!$this->force && count($existing) > 0 && $summary['delists'] > $delistLimit) {
                 throw new \RuntimeException(sprintf(
-                    "Refusing changeset for %s: %d delists against %d existing entities. "
-                    . "If this is a genuine list revision, delete out/%s.jsonl and re-sync.",
-                    $sourceId, $summary['delists'], count($existing), $sourceId
+                    "Refusing changeset for %s: %d delists against %d existing entities (limit %d). "
+                    . "If this is a genuine list revision, re-run with --force.",
+                    $sourceId, $summary['delists'], count($existing), $delistLimit
+                ));
+            }
+
+            // independent truncation check: distrust any parse that produced
+            // under half of what the last successful sync recorded, even if
+            // the delist math would pass.
+            $lastCount = $this->store->getLastEntityCount($sourceId);
+            if (!$this->force && $lastCount !== null && count($entities) < 0.5 * $lastCount) {
+                throw new \RuntimeException(sprintf(
+                    "Refusing changeset for %s: parsed %d entities against %d last run. Re-run with --force if genuine.",
+                    $sourceId, count($entities), $lastCount
                 ));
             }
 

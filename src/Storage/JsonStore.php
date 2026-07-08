@@ -36,6 +36,13 @@ class JsonStore implements EntityStore
         return $hashes;
     }
 
+    public function getLastEntityCount(string $sourceId): ?int
+    {
+        $manifest = $this->loadManifest();
+        $count = $manifest['sources'][$sourceId]['entity_count'] ?? null;
+        return $count !== null ? (int) $count : null;
+    }
+
     public function apply(Changeset $changeset): array
     {
         $sourceId = $changeset->getSourceId();

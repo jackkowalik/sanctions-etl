@@ -20,6 +20,12 @@ interface EntityStore
     public function getActiveHashes(string $sourceId): array;
 
     /**
+     * Entity count recorded by the last successful sync, or null if the
+     * source has never synced.
+     */
+    public function getLastEntityCount(string $sourceId): ?int;
+    
+    /**
      * Apply a changeset to the backend.
      *
      * @return array{inserted: int, updated: int, delisted: int, errors: int}
