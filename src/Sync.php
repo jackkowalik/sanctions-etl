@@ -13,6 +13,11 @@ use SanctionsEtl\Download\SwissSECO;
 use SanctionsEtl\Download\UKHMTreasury;
 use SanctionsEtl\Storage\EntityStore;
 
+/**
+ * Runs the fetch -> parse -> diff -> load pipeline across all registered
+ * sources. The storage backend is injected so the same loop drives the
+ * JSONL and MySQL modes.
+ */
 class Sync
 {
     private Config $config;
@@ -37,6 +42,7 @@ class Sync
         $this->registerSources();
     }
 
+    // new sources get registered here, one line each
     private function registerSources(): void
     {
         $logger = $this->logger;
@@ -58,6 +64,12 @@ class Sync
         return $this->sources;
     }
 
+    /**
+     * Sync every registered source, or a single one by id.
+     *
+     * @param string|null $onlySource source id to sync, null for all
+     * @return int process exit code, nonzero if any source failed
+     */
     public function execute(?string $onlySource = null): int
     {
         $sources = $this->sources;
@@ -94,6 +106,7 @@ class Sync
             $this->cleanupDownloads();
         }
 
+        // nonzero exit if anything failed, so cron can alert on it
         foreach ($results as $result) {
             if ($result['status'] === 'error') {
                 return 1;
@@ -116,6 +129,7 @@ class Sync
             $fetch = $source->fetch($lastHash);
             $fetchMs = (int) round((microtime(true) - $fetchStart) * 1000);
 
+            // content hash matches the previous sync, nothing to do
             if (!$fetch->hasChanged()) {
                 $elapsed = (int) round((microtime(true) - $start) * 1000);
                 echo "  Unchanged (skipped) [{$fetchMs}ms]\n\n";
@@ -134,6 +148,9 @@ class Sync
 
             echo "  Parsed " . count($entities) . " entities [{$parseMs}ms]\n";
 
+            // zero entities means the parser broke or the source changed its
+            // format, never a genuinely empty list. Bailing here keeps the
+            // diff stage from delisting the entire source.
             if (empty($entities)) {
                 throw new \RuntimeException("Parser returned zero entities for {$sourceId}");
             }
@@ -193,6 +210,7 @@ class Sync
                 'error' => $e->getMessage(),
             ]);
 
+            // a failed source is recorded and skipped, the rest of the run continues
             $this->store->logSync($sourceId, 'full', 'error', [
                 'duration_ms' => $elapsed,
                 'error_message' => $e->getMessage(),
@@ -240,6 +258,8 @@ class Sync
         echo str_repeat('=', 80) . "\n";
     }
 
+    // raw downloads can be large (SECO is around 40MB), so they are removed
+    // after the run unless KEEP_DOWNLOADS is set for debugging
     private function cleanupDownloads(): void
     {
         $deleted = 0;
