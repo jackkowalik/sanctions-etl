@@ -114,7 +114,9 @@ class SanctionedEntity
     public function getContentHash(): string
     {
         // sort list fields so upstream reordering does not register as a
-        // change, and include type and listing date so reclassification does
+        // change, and include type and listing date so reclassification does.
+        // changing this formula invalidates every stored hash, so the first
+        // sync after a change reports the whole source as updated once
         $sorted = function (array $items): array {
             $encoded = array_map(fn($i) => json_encode($i), $items);
             sort($encoded);

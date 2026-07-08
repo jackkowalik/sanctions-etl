@@ -21,7 +21,7 @@ class Config
         'SAM_API_KEY'    => '',
     ];
 
-    /** @var array<string, String> */
+    /** @var array<string, string> */
     private array $values;
 
     private function __construct(array $values)

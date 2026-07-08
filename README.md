@@ -1,6 +1,6 @@
 # sanctions-etl
 
-> Work in progress: 5 of 14 sources are live
+> Work in progress: 6 of 15 sources are live
 
 Sanctions data ETL in PHP. Syncs official sanctions and exclusion lists from
 14 government and institutional sources into a normalized, machine-readable
@@ -94,10 +94,10 @@ Parse failures are counted and logged with source record identifiers.
 
 ## MySQL mode
 
-Set STORAGE=mysql plus DB_* credentials in .env, load schema.sql, and the
-same pipeline writes to relational tables (entities, aliases, identifiers,
-addresses) with delist timestamps instead of file rewrites. A
-docker-compose file is included for a two-command local setup.
+Not implemented yet. The storage layer is an interface, so a MySQL backend
+slots in without touching the pipeline. Planned: relational tables for
+entities, aliases, identifiers, and addresses, delist timestamps instead of
+file removal, plus schema.sql and a docker-compose setup.
 
 ## Roadmap
 

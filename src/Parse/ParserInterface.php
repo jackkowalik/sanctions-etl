@@ -7,11 +7,11 @@ use SanctionsEtl\Data\SanctionedEntity;
 interface ParserInterface
 {
     /**
-     * Parse raw content from a sanctions source into normalized entities.
+     * Parse a downloaded source file into normalized entities.
      *
-     * @param string $rawContent  The raw file content (XML, CSV, JSON, etc.)
-     * @param string $sourceId    Source identifier for tagging parsed entities
+     * @param string $filePath  Path to the downloaded file (XML, CSV, JSON)
+     * @param string $sourceId  Source identifier for tagging parsed entities
      * @return SanctionedEntity[]
      */
-    public function parse(string $rawContent, string $sourceId): array;
+    public function parse(string $filePath, string $sourceId): array;
 }
