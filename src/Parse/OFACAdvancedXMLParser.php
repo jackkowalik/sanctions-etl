@@ -333,38 +333,6 @@ class OFACAdvancedXMLParser implements ParserInterface
         ];
     }
 
-    private function parseSanctionsEntryRef(\XMLReader $reader): void
-    {
-        $xml = $reader->readOuterXml();
-        $xml = str_replace(' xmlns="' . $this->ns . '"', '', $xml);
-        $node = @simplexml_load_string($xml);
-        if (!$node) return;
-
-        $profileId = (string)($node['ProfileID'] ?? '');
-        if ($profileId === '') return;
-
-        $programs = [];
-        foreach ($node->EntryEvent ?? [] as $event) {
-            $progId = (string)($event['SanctionsProgramID'] ?? '');
-            if ($progId !== '' && isset($this->sanctionsPrograms[$progId])) {
-                $prog = $this->sanctionsPrograms[$progId];
-                if ($prog !== '' && $prog !== 'Unknown') {
-                    $programs[] = $prog;
-                }
-            }
-        }
-
-        if (!empty($programs)) {
-            if (!isset($this->sanctionsEntries[$profileId])) {
-                $this->sanctionsEntries[$profileId] = [];
-            }
-            $this->sanctionsEntries[$profileId] = array_merge(
-                $this->sanctionsEntries[$profileId],
-                $programs
-            );
-        }
-    }
-
     private function parseDistinctParty(string $xml, string $sourceId): ?SanctionedEntity
     {
         $xml = str_replace(' xmlns="' . $this->ns . '"', '', $xml);
