@@ -324,6 +324,14 @@ class Sync
                 }
             }
         }
+        // the CSL sub-lists share one downloaded file whose name carries no
+        // source id, so the per-source pattern above never matches it
+        foreach (glob($this->config->downloadDir() . "/us_csl_*") as $file) {
+            if (@unlink($file)) {
+                $deleted++;
+            }
+        }
+
         if ($deleted > 0) {
             $this->logger->info("Cleaned up downloaded files", ['deleted' => $deleted]);
         }

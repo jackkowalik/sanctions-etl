@@ -165,7 +165,7 @@ class USConsolidatedScreeningList implements SourceInterface
         $hash = hash_file('sha256', $destFile);
 
         if ($lastHash !== null && $hash === $lastHash) {
-            @unlink($destFile);
+            // keep the shared file: sibling sub-lists reuse it via findCachedFile
             return FetchResult::unchanged($hash);
         }
 
