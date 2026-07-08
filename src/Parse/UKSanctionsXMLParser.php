@@ -34,7 +34,10 @@ class UKSanctionsXMLParser implements ParserInterface
                 try {
                     $xml = $reader->readOuterXml();
                     $node = @simplexml_load_string($xml);
-                    if ($node === false) continue;
+                    if ($node === false) {
+                        $errors++;
+                        continue;
+                    }
 
                     $entity = $this->parseDesignation($node, $sourceId);
                     if ($entity !== null) {

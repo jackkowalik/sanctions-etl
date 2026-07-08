@@ -43,7 +43,10 @@ class UNConsolidatedXMLParser implements ParserInterface
                 try {
                     $xml = $reader->readOuterXml();
                     $node = @simplexml_load_string($xml);
-                    if ($node === false) continue;
+                    if ($node === false) {
+                        $errors++;
+                        continue;
+                    }
 
                     $entity = $name === 'INDIVIDUAL'
                         ? $this->parseIndividual($node, $sourceId)
