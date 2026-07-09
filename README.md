@@ -74,14 +74,13 @@ a content hash used for change detection between syncs.
 | France DG Tresor National Freezing List | fr_tresor | JSON |
 | US SAM.gov Procurement Exclusions | us_sam_exclusions | CSV |
 
-The CSL is a single download that fans out into 11 sub-list source IDs:
+The US Consolidated Screening List is a single download that fans out into 11 sub-list source IDs:
 us_bis_entity, us_bis_denied, us_bis_unverified, us_bis_meu, us_cmic,
 us_itar_debarred, us_isn_nonprolif, us_ofac_ssi, us_ofac_mbs, us_ofac_plc,
-and us_ofac_capta. SDN entries are excluded from the CSL parse since they
+and us_ofac_capta. SDN entries are excluded from the CSL parse because they
 are already ingested from the richer OFAC advanced XML.
 
-SAM.gov is the one source requiring a key. A free one from your sam.gov
-account, set as SAM_API_KEY in `.env`. Left unset, that source is skipped
+SAM.gov is the one source requiring a key. Left unset, SAM.gov is skipped
 with a log line and everything else syncs just fine.
 
 ## How it works
@@ -89,7 +88,7 @@ with a log line and everything else syncs just fine.
 Each sync is a four-stage pipeline per source: fetch (with hash
 short-circuit), parse into the normalized entity model, diff against the
 current stored state to compute the inserts / updates / delists, and apply the
-changeset to the storage backend.
+changeset to the storage method.
 
 ## MySQL mode
 
@@ -111,14 +110,14 @@ deleted, so re-listings restore the same row and history survives. The
 
 ## Limitations
 
-The two backends disagree on delists by design: MySQL keeps delisted
-entities with a delisted_at timestamp, JSONL drops them from the files on
-the next sync that applies changes. Point in time questions like "was X
-listed on date Y" are answerable only in MySQL mode.
+MySQL keeps delisted entities with a delisted_at timestamp and JSONL drops 
+them from the files on the next sync that applies changes. Point in time 
+questions like "was X listed on date Y" are answerable only in MySQL mode 
+because of that. 
 
 supportsDelta() and getExpectedUpdateFrequency() are declared on the
-source interface but not consumed anywhere yet: no current source
-publishes deltas, and freshness monitoring is planned but unbuilt.
+source interface but not consumed anywhere yet: no current source in the
+list publishes deltas, and freshness monitoring is not built.
 
 ## Roadmap
 
