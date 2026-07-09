@@ -188,10 +188,11 @@ class OFACAdvancedXMLParser implements ParserInterface
 
         $reader->close();
 
-        // SanctionsEntry may be outside ReferenceValueSets — do a second scan
-        if (empty($this->sanctionsEntries)) {
-            $this->parseSanctionsEntries($filePath);
-        }
+        // SanctionsEntries sit after DistinctParties in the document, past the
+        // early exit above, so this scan is the one and only populator of the
+        // map. The emptiness check that used to guard it was dead code:
+        // nothing before this point can fill it.
+        $this->parseSanctionsEntries($filePath);
 
         // Count total ID docs across all identities
         $totalIdDocs = 0;
