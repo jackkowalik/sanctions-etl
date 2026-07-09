@@ -109,6 +109,17 @@ deleted, so re-listings restore the same row and history survives. The
 `sanctions_sources` and `sanctions_sync_log` tables replace
 `manifest.json` and `sync_log.jsonl`.
 
+## Limitations
+
+The two backends disagree on delists by design: MySQL keeps delisted
+entities with a delisted_at timestamp, JSONL drops them from the files on
+the next sync that applies changes. Point in time questions like "was X
+listed on date Y" are answerable only in MySQL mode.
+
+supportsDelta() and getExpectedUpdateFrequency() are declared on the
+source interface but not consumed anywhere yet: no current source
+publishes deltas, and freshness monitoring is planned but unbuilt.
+
 ## Roadmap
 
 A screening engine. Basically name matching against this dataset with transliteration
