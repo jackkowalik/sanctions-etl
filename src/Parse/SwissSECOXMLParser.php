@@ -8,6 +8,7 @@ use SanctionsEtl\Data\SanctionedEntity;
 class SwissSECOXMLParser implements ParserInterface
 {
     private LoggerInterface $logger;
+    private int $errorCount = 0;
 
     /** place-id -> country ISO code mapping, built during parse */
     private array $places = [];
@@ -15,6 +16,11 @@ class SwissSECOXMLParser implements ParserInterface
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
+    }
+
+    public function getErrorCount(): int
+    {
+        return $this->errorCount;
     }
 
     public function parse(string $filePath, string $sourceId): array
@@ -85,6 +91,8 @@ class SwissSECOXMLParser implements ParserInterface
             'errors' => $errors,
             'places_loaded' => count($this->places)
         ]);
+
+        $this->errorCount = $errors;
 
         return $entities;
     }

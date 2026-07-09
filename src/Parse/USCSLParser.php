@@ -9,12 +9,18 @@ use SanctionsEtl\Download\USConsolidatedScreeningList;
 class USCSLParser implements ParserInterface
 {
     private LoggerInterface $logger;
+    private int $errorCount = 0;
     private string $targetSourceId;
 
     public function __construct(LoggerInterface $logger, string $targetSourceId)
     {
         $this->logger = $logger;
         $this->targetSourceId = $targetSourceId;
+    }
+
+    public function getErrorCount(): int
+    {
+        return $this->errorCount;
     }
 
     public function parse(string $filePath, string $sourceId): array
@@ -91,6 +97,8 @@ class USCSLParser implements ParserInterface
             'skipped' => $skipped,
             'errors' => $errors
         ]);
+
+        $this->errorCount = $errors;
 
         return $entities;
     }

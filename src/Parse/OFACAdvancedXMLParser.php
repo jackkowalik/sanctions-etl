@@ -8,6 +8,7 @@ use SanctionsEtl\Data\SanctionedEntity;
 class OFACAdvancedXMLParser implements ParserInterface
 {
     private LoggerInterface $logger;
+    private int $errorCount = 0;
     private string $ns = 'https://sanctionslistservice.ofac.treas.gov/api/PublicationPreview/exports/ADVANCED_XML';
 
     // Reference lookups parsed from ReferenceValueSets
@@ -49,6 +50,11 @@ class OFACAdvancedXMLParser implements ParserInterface
      * @param string $sourceId  Source identifier
      * @return SanctionedEntity[]
      */
+    public function getErrorCount(): int
+    {
+        return $this->errorCount;
+    }
+
     public function parse(string $filePath, string $sourceId): array
     {
         $this->logger->info("Starting OFAC advanced XML parse", [
@@ -94,6 +100,8 @@ class OFACAdvancedXMLParser implements ParserInterface
             'entities' => $count,
             'errors' => $errors
         ]);
+
+        $this->errorCount = $errors;
 
         return $entities;
     }

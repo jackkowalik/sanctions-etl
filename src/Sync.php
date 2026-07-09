@@ -218,7 +218,18 @@ class Sync
             $loadResult = ['inserted' => 0, 'updated' => 0, 'delisted' => 0, 'errors' => 0];
             if (!$changeset->isEmpty()) {
                 $loadStart = microtime(true);
-                $loadResult = $this->store->apply($changeset);
+                // parse errors plus delists is the toxic pairing: a record that
+            // fails to parse is indistinguishable from one that left the list,
+            // so these delists may be parse failures wearing a costume
+            $parseErrors = $parser->getErrorCount();
+            $delists = $changeset->getSummary()['delists'];
+            if (!$force && $parseErrors > 0 && $delists > 0) {
+                throw new \RuntimeException(
+                    "{$parseErrors} parse errors alongside {$delists} delists; refusing to apply. Rerun with --force to override."
+                );
+            }
+
+            $loadResult = $this->store->apply($changeset);
                 $loadMs = (int) round((microtime(true) - $loadStart) * 1000);
                 echo "  Loaded [{$loadMs}ms]\n";
             } else {

@@ -19,10 +19,16 @@ use SanctionsEtl\Data\SanctionedEntity;
 class USGovSAMParser implements ParserInterface
 {
     private LoggerInterface $logger;
+    private int $errorCount = 0;
 
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
+    }
+
+    public function getErrorCount(): int
+    {
+        return $this->errorCount;
     }
 
     public function parse(string $filePath, string $sourceId): array
@@ -92,6 +98,8 @@ class USGovSAMParser implements ParserInterface
             'skipped_inactive' => $skipped,
             'errors' => $errors,
         ]);
+
+        $this->errorCount = $errors;
 
         return $entities;
     }

@@ -8,6 +8,7 @@ use SanctionsEtl\Data\SanctionedEntity;
 class UNConsolidatedXMLParser implements ParserInterface
 {
     private LoggerInterface $logger;
+    private int $errorCount = 0;
 
     public function __construct(LoggerInterface $logger)
     {
@@ -19,6 +20,11 @@ class UNConsolidatedXMLParser implements ParserInterface
      * @param string $sourceId  Source identifier
      * @return SanctionedEntity[]
      */
+    public function getErrorCount(): int
+    {
+        return $this->errorCount;
+    }
+
     public function parse(string $filePath, string $sourceId): array
     {
         $this->logger->info("Starting UN consolidated XML parse", [
@@ -73,6 +79,8 @@ class UNConsolidatedXMLParser implements ParserInterface
             'entities' => count($entities),
             'errors' => $errors
         ]);
+
+        $this->errorCount = $errors;
 
         return $entities;
     }

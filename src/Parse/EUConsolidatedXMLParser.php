@@ -8,11 +8,17 @@ use SanctionsEtl\Data\SanctionedEntity;
 class EUConsolidatedXMLParser implements ParserInterface
 {
     private LoggerInterface $logger;
+    private int $errorCount = 0;
     private string $ns = 'http://eu.europa.ec/fpi/fsd/export';
 
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
+    }
+
+    public function getErrorCount(): int
+    {
+        return $this->errorCount;
     }
 
     public function parse(string $filePath, string $sourceId): array
@@ -78,6 +84,8 @@ class EUConsolidatedXMLParser implements ParserInterface
             'entities' => count($entities),
             'errors' => $errors
         ]);
+
+        $this->errorCount = $errors;
 
         return $entities;
     }

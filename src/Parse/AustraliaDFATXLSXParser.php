@@ -9,6 +9,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 class AustraliaDFATXLSXParser implements ParserInterface
 {
     private LoggerInterface $logger;
+    private int $errorCount = 0;
 
     private const COL_REFERENCE = 0;
     private const COL_NAME = 1;
@@ -33,6 +34,11 @@ class AustraliaDFATXLSXParser implements ParserInterface
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
+    }
+
+    public function getErrorCount(): int
+    {
+        return $this->errorCount;
     }
 
     public function parse(string $filePath, string $sourceId): array
@@ -107,6 +113,8 @@ class AustraliaDFATXLSXParser implements ParserInterface
             'entities' => count($entities),
             'errors' => $errors,
         ]);
+
+        $this->errorCount = $errors;
 
         return $entities;
     }

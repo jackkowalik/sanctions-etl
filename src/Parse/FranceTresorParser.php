@@ -39,10 +39,16 @@ use SanctionsEtl\Data\SanctionedEntity;
 class FranceTresorParser implements ParserInterface
 {
     private LoggerInterface $logger;
+    private int $errorCount = 0;
 
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
+    }
+
+    public function getErrorCount(): int
+    {
+        return $this->errorCount;
     }
 
     public function parse(string $filePath, string $sourceId): array
@@ -94,6 +100,8 @@ class FranceTresorParser implements ParserInterface
             'entities' => count($entities),
             'errors' => $errors,
         ]);
+
+        $this->errorCount = $errors;
 
         return $entities;
     }
