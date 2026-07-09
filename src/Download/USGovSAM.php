@@ -96,18 +96,28 @@ class USGovSAM implements SourceInterface
             throw new \RuntimeException("No exclusions CSV found in ZIP");
         }
 
-        $extracted = $zip->extractTo($destDir, $csvName);
+        // stream the entry to a path we control: entry names come off the
+        // network and must never dictate the write path (zip-slip hardening)
+        $in = $zip->getStream($csvName);
+        if ($in === false) {
+            $zip->close();
+            @unlink($zipFile);
+            throw new \RuntimeException("Failed to read CSV entry from ZIP");
+        }
+
+        $out = fopen($csvFile, 'w');
+        if ($out === false) {
+            fclose($in);
+            $zip->close();
+            @unlink($zipFile);
+            throw new \RuntimeException("Failed to open file for writing: {$csvFile}");
+        }
+
+        stream_copy_to_stream($in, $out);
+        fclose($in);
+        fclose($out);
         $zip->close();
         @unlink($zipFile);
-
-        if (!$extracted) {
-            throw new \RuntimeException("Failed to extract CSV from ZIP");
-        }
-
-        $extractedPath = $destDir . '/' . $csvName;
-        if ($extractedPath !== $csvFile) {
-            rename($extractedPath, $csvFile);
-        }
 
         $fileSize = filesize($csvFile);
         $hash = hash_file('sha256', $csvFile);
