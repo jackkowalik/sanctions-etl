@@ -1,0 +1,19 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          extensions: curl, dom, gd, iconv, mbstring, simplexml, xml, xmlreader, zip
+      - run: composer install --no-progress --prefer-dist
+      - run: |
+          for f in $(find src tests bin -name '*.php'); do
+            php -l "$f" > /dev/null || exit 1
+          done
+      - run: vendor/bin/phpunit
