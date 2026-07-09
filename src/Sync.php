@@ -170,7 +170,8 @@ class Sync
             echo "  Fetched [{$fetchMs}ms, " . number_format($fetch->getContentSize()) . " bytes]\n";
 
             $parseStart = microtime(true);
-            $entities = $source->getParser()->parse($fetch->getRawContent(), $sourceId);
+            $parser = $source->getParser();
+            $entities = $parser->parse($fetch->getRawContent(), $sourceId);
             $parseMs = (int) round((microtime(true) - $parseStart) * 1000);
 
             echo "  Parsed " . count($entities) . " entities [{$parseMs}ms]\n";
@@ -215,21 +216,19 @@ class Sync
                 ));
             }
 
-            $loadResult = ['inserted' => 0, 'updated' => 0, 'delisted' => 0, 'errors' => 0];
-            if (!$changeset->isEmpty()) {
-                $loadStart = microtime(true);
-                // parse errors plus delists is the toxic pairing: a record that
-            // fails to parse is indistinguishable from one that left the list,
-            // so these delists may be parse failures wearing a costume
+            // a record that fails to parse is indistinguishable from one that left the list
+            // so these delists may be parse failures
             $parseErrors = $parser->getErrorCount();
-            $delists = $changeset->getSummary()['delists'];
-            if (!$force && $parseErrors > 0 && $delists > 0) {
+            if (!$this->force && $parseErrors > 0 && $summary['delists'] > 0) {
                 throw new \RuntimeException(
-                    "{$parseErrors} parse errors alongside {$delists} delists; refusing to apply. Rerun with --force to override."
+                    "{$parseErrors} parse errors alongside {$summary['delists']} delists; refusing to apply. Rerun with --force to override."
                 );
             }
 
-            $loadResult = $this->store->apply($changeset);
+            $loadResult = ['inserted' => 0, 'updated' => 0, 'delisted' => 0, 'errors' => 0];
+            if (!$changeset->isEmpty()) {
+                $loadStart = microtime(true);
+                $loadResult = $this->store->apply($changeset);
                 $loadMs = (int) round((microtime(true) - $loadStart) * 1000);
                 echo "  Loaded [{$loadMs}ms]\n";
             } else {
@@ -265,7 +264,7 @@ class Sync
                 'duration_ms' => $elapsed,
             ];
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             $elapsed = (int) round((microtime(true) - $start) * 1000);
 
             echo "  FAILED: {$e->getMessage()}\n\n";
