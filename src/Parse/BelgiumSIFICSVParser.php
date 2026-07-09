@@ -19,6 +19,7 @@ use SanctionsEtl\Data\SanctionedEntity;
 class BelgiumSIFICSVParser implements ParserInterface
 {
     private LoggerInterface $logger;
+    private int $errorCount = 0;
 
     private const COL_LASTNAME = 0;
     private const COL_FIRSTNAME = 1;
@@ -40,6 +41,11 @@ class BelgiumSIFICSVParser implements ParserInterface
     public function __construct(LoggerInterface $logger)
     {
         $this->logger = $logger;
+    }
+
+    public function getErrorCount(): int
+    {
+        return $this->errorCount;
     }
 
     public function parse(string $filePath, string $sourceId): array
@@ -116,6 +122,8 @@ class BelgiumSIFICSVParser implements ParserInterface
             'entities' => count($entities),
             'errors' => $errors,
         ]);
+
+        $this->errorCount = $errors;
 
         return $entities;
     }
@@ -271,7 +279,9 @@ class BelgiumSIFICSVParser implements ParserInterface
             $month = (int)$m[2];
             $yearShort = (int)$m[3];
             $year = 2000 + $yearShort;
-            if ($year > (int) date("Y")) {
+            // DOB pivot uses >=: nobody born in the current year appears on a
+            // sanctions list, so a two-digit year landing on this year is 19xx
+            if ($year >= (int) date("Y")) {
                 $year -= 100;
             }
             return sprintf('%d-%02d-%02d', $year, $month, $day);

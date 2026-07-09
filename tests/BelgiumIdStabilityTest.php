@@ -14,8 +14,8 @@ class BelgiumIdStabilityTest extends TestCase
         return "{$last};{$first};;{$whole};M;{$dob};;;;;{$remark};BE;P;;01-06-16;";
     }
 
-    /** @return array<string, string> primary_name => source_entity_id */
-    private function parseRows(array $rows): array
+    /** @return \SanctionsEtl\Data\SanctionedEntity[] */
+    private function parseCsv(array $rows): array
     {
         $csv = self::HEADER . "\n" . implode("\n", $rows) . "\n";
         $file = tempnam(sys_get_temp_dir(), 'be_test_');
@@ -25,8 +25,14 @@ class BelgiumIdStabilityTest extends TestCase
         $entities = $parser->parse($file, 'be_sifi');
         unlink($file);
 
+        return $entities;
+    }
+
+    /** @return array<string, string> primary_name => source_entity_id */
+    private function parseRows(array $rows): array
+    {
         $ids = [];
-        foreach ($entities as $entity) {
+        foreach ($this->parseCsv($rows) as $entity) {
             $ids[$entity->toArray()['primary_name']] = $entity->getSourceEntityId();
         }
         return $ids;
@@ -63,5 +69,18 @@ class BelgiumIdStabilityTest extends TestCase
 
         $this->assertCount(3, $ids);
         $this->assertArrayHasKey('Dave DELTA', $ids);
+    }
+
+    public function testDobInCurrentTwoDigitYearPivotsToLastCentury(): void
+    {
+        $yy = substr(date('Y'), 2);
+        $entities = $this->parseCsv([
+            $this->row('ECHO', 'Ella', "15-03-{$yy}"),
+        ]);
+
+        $this->assertCount(1, $entities);
+        $dates = $entities[0]->toArray()['dates'];
+        $this->assertNotEmpty($dates, 'DOB in the current two-digit year was dropped instead of pivoted');
+        $this->assertSame(((int) date('Y') - 100) . '-03-15', $dates[0]['value']);
     }
 }
